@@ -20,14 +20,10 @@ exports.register = catchAsync(async (req, res, next) => {
         return next(new appError('This email is already exist! Please use another one.', 400))
     }
     const newUser = await User.create(req.body)
-
-    res.status(201).json({
-        status: 'success',
-        data: {
-            user: newUser,
-            token: signToken(newUser._id)
-        }
-    })
+    if(newUser) {
+        req.newUser = newUser
+    }
+    next();
 })
 
 exports.signIn = catchAsync(async (req, res, next) => {

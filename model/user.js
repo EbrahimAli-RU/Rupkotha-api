@@ -36,6 +36,9 @@ const userSchema = new mongoose.Schema({
             message: 'Confirm password is not same as password'
         }
     },
+    activeChild: {
+        type: mongoose.Schema.ObjectId,
+    },
     role: {
         type: String,
         default: 'user',
@@ -53,6 +56,7 @@ userSchema.pre('save', async function (next) {
     this.confirmPassword = undefined
     next();
 })
+
 
 userSchema.methods.checkPassword = async function (providedPassword, storedpassword) {
     return await bcrypt.compare(providedPassword, storedpassword);
