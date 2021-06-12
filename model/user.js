@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema({
             message: 'Confirm password is not same as password'
         }
     },
+    role: {
+        type: String,
+        default: 'user',
+        enum: ['user', 'admin']
+    },
     passwordResetToken: String,
     passwordResetExpire: Date
 }, { timestamps: true })

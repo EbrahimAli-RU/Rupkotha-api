@@ -15,12 +15,17 @@ const signToken = id => {
 
 
 exports.register = catchAsync(async (req, res, next) => {
-    const user = await User.create(req.body)
+    const user = await User.findOne({email: req.body.email})
+    if(user) {
+        return next(new appError('This email is already exist! Please use another one.', 400))
+    }
+    const newUser = await User.create(req.body)
 
     res.status(201).json({
         status: 'success',
         data: {
-            user
+            user: newUser,
+            token: signToken(newUser._id)
         }
     })
 })
