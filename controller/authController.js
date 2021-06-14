@@ -20,10 +20,19 @@ exports.register = catchAsync(async (req, res, next) => {
         return next(new appError('This email is already exist! Please use another one.', 400))
     }
     const newUser = await User.create(req.body)
+    
     if(newUser) {
-        req.newUser = newUser
+        req.user = newUser
+        next();
+    } else {
+        res.status(400).json({
+            status: 'fail',
+            data: {
+                message: 'Some went wrong to Creating Your acconut!! Please try again'
+            }
+        })
     }
-    next();
+    
 })
 
 exports.signIn = catchAsync(async (req, res, next) => {
@@ -48,17 +57,22 @@ exports.signIn = catchAsync(async (req, res, next) => {
 
 exports.protected = catchAsync(async (req, res, next) => {
     let token;
-    if (req.headers.authorization || req.headers.authorization.startsWith('Bearer')) {
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1]
     }
+    
     if (!token) {
-        return (new appError(`You are not logged in! please login.`, 401))
+        return next(new appError(`You are not logged in! please login.`, 401))
     }
 
-    const decoded = promisify(jwt.verify)(token, process.env.ACCESS_TOKEN_SECRET_KEY)
+    const decoded = await promisify(jwt.verify)(token, process.env.ACCESS_TOKEN_SECRET_KEY)
+    console.log(decoded.id)
     const loggedInUser = await User.findById(decoded.id)
     if (!loggedInUser) {
         return next(new appError('The user belonging to this token does not exist', 401))
+    }
+    if (await loggedInUser.passwordChangedAfter(decoded.iat)) {
+        return next(new AppError(`You have recently changed your password, please log in again`, 401));
     }
 
     req.user = loggedInUser
@@ -148,6 +162,28 @@ exports.restrictTo = (...roles) => {
         next();
     };
 };
+
+exports.getUser = catchAsync(async (req, res, next) => {
+    const users = await User.findOne({_id: req.params.userId}).populate({
+        path: 'children',
+        select: ['name']
+    })
+    res.status(200).json({
+        status: 'success',
+        users
+    })
+})
+
+exports.deleteUser =async userId => {
+    console.log("KJHGFDSDFGHJ")
+     async (req, res, next) => {
+        const user = await User.findByIdAndDelete(userId);
+        console.log('INSIDE DELETE USER!!!!!!!!');
+        console.log(user);
+        next();
+    };
+}
+
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
     const users = await User.find()

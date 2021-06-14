@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const childSchema = new mongoose.Schema({
     profileImg: {
         type: String,
-        // required: true,
+        // required: true
     },
     name: {
         type: String,
@@ -18,6 +18,10 @@ const childSchema = new mongoose.Schema({
     language: {
         type: String,
         default: 'english'
+    },
+    parrent: {
+        type: mongoose.Schema.ObjectId,
+        required: [true, 'Parrent is required'],
     },
     interest: [String]
 }, {timestamps: true})

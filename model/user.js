@@ -46,8 +46,17 @@ const userSchema = new mongoose.Schema({
     },
     passwordResetToken: String,
     passwordResetExpire: Date
-}, { timestamps: true })
+}, { 
+    timestamps: true,
+    toObject:{virtuals: true},
+    toJSON:{virtuals: true} 
+})
 
+userSchema.virtual('children', {
+    ref: 'child',
+    foreignField: 'parrent',
+    localField: '_id'
+})
 
 userSchema.pre('save', async function (next) {
     if (!this.isModified('password')) return next();
@@ -60,6 +69,16 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.checkPassword = async function (providedPassword, storedpassword) {
     return await bcrypt.compare(providedPassword, storedpassword);
+}
+
+userSchema.methods.passwordChangedAfter = async function (JWTtimeStamp) {
+
+    if (this.passwordChangeAt) {
+        const passwordChangeAtTimeStamp = parseInt(this.passwordChangeAt.getTime() / 1000);
+        return JWTtimeStamp < passwordChangeAtTimeStamp;
+    }
+
+    return false;
 }
 
 userSchema.methods.createPasswordResetToken = function () {
