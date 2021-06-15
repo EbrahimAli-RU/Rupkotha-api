@@ -2,23 +2,27 @@ const express = require('express')
 const app = express();
 const morgan = require('morgan')
 const cors = require('cors')
-const bodyparser = require('body-parser')
+const path = require('path')
 
 const globalErrorHandler = require('./controller/errorController')
 const appError = require('./utils/appError')
 const email = require('./utils/email')
 const childRouter = require('./router/child');
 const authRouter = require('./router/user')
-
+const avaterRouter = require('./router/avater')
 
 app.use(cors())
-app.use(bodyparser.json())
-app.use(bodyparser.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
 if (process.env.NODE_ENV === "development") {
     app.use(morgan('dev'))
 }
 
+app.use(express.static('public'))
+app.use(express.static(path.join(__dirname, 'public/avater')))
+
+app.use('/api/v1/avater', avaterRouter)
 app.use('/api/v1/user', authRouter)
 app.use('/api/v1/child', childRouter)
 

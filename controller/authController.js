@@ -165,8 +165,7 @@ exports.restrictTo = (...roles) => {
 
 exports.getUser = catchAsync(async (req, res, next) => {
     const users = await User.findOne({_id: req.params.userId}).populate({
-        path: 'children',
-        select: ['name']
+        path: 'children'
     })
     res.status(200).json({
         status: 'success',

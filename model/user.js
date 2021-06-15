@@ -13,27 +13,25 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         required: [true, `Email is required`],
-        validate: [validator.isEmail, 'Not an email, please provide correct email'],
+        validate: [validator.isEmail, 'Not an email! please provide correct email.'],
         unique: true,
         lowercase: true
     },
     password: {
         type: String,
-        required: [true, `Password is required`],
-        minlength: 8,
-        maxlength: 20,
+        required: [true, `Password is required.`],
+        minlength: [8, 'Password contain at least 8 Charecter.'],
         select: false
     },
     confirmPassword: {
         type: String,
-        required: [true, `Password is required`],
-        minlength: 8,
-        maxlength: 20,
+        required: [true, `Confirm password is required`],
+        minlength: [8, 'Confirm password contain at least 8 Charecter.'],
         validate: {
             validator: function (value) {
                 return this.password === value
             },
-            message: 'Confirm password is not same as password'
+            message: 'Confirm password is not same as password.'
         }
     },
     activeChild: {
