@@ -45,9 +45,9 @@ exports.addInterest = catchAsync(async(req, res, next) => {
 
     res.status(201).json({
         status: 'success',
-        data: [
+        data: {
             interest
-        ]
+        } 
     })
 })
 
@@ -56,8 +56,8 @@ exports.getAllInterest = catchAsync(async(req, res, next) => {
 
     res.status(200).json({
         status: 'success',
-        data: [
+        data: {
             interest
-        ]
+        }
     })
 })

@@ -44,6 +44,13 @@ exports.signIn = catchAsync(async (req, res, next) => {
     if (!user || !(await user.checkPassword(password, user.password))) {
         return next(new appError(`Invalid email or password`))
     }
+    const cookieOption = {
+        expiresIn: Date.now() + process.env.ACCESS_TOKEN_EXPIRE,
+        secure: false,
+        httpOnly: false
+    }
+
+    res.cookie('jwt', signToken(user._id), cookieOption )
 
     res.status(200).json({
         status: 'success',
@@ -57,16 +64,19 @@ exports.signIn = catchAsync(async (req, res, next) => {
 
 exports.protected = catchAsync(async (req, res, next) => {
     let token;
+    console.log(req.headers.cookie)
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1]
+    } else if (req.headers.cookie.split('=')[1]) {
+        token = req.headers.cookie.split('=')[1]
     }
-    
+    console.log(req.headers.cookie)
     if (!token) {
         return next(new appError(`You are not logged in! please login.`, 401))
     }
-
+    console.log('GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGg')
     const decoded = await promisify(jwt.verify)(token, process.env.ACCESS_TOKEN_SECRET_KEY)
-    console.log(decoded.id)
+    console.log('GGGGGGGGGGGGGGGGGGGGGGGGGG',decoded.id)
     const loggedInUser = await User.findById(decoded.id)
     if (!loggedInUser) {
         return next(new appError('The user belonging to this token does not exist', 401))

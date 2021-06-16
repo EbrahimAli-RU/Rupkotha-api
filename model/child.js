@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const childSchema = new mongoose.Schema({
-    profileImg: {
+    photo: {
         type: String,
-        // required: true
+        default: 'avater.jpeg'
     },
     name: {
         type: String,

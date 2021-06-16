@@ -1,9 +1,14 @@
+const jwt = require('jsonwebtoken')
 const catchAsync = require('../utils/catchAsync')
 const appError = require('../utils/appError')
 const Child = require('../model/child');
 const User = require('../model/user')
 
 const authController = require('./authController');
+
+const signToken = id => {
+    return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: process.env.ACCESS_TOKEN_EXPIRE })
+}
 
 
 exports.addChild = catchAsync(async(req, res, next) => {
@@ -24,12 +29,21 @@ exports.createChild =async(req, res, next) => {
     if(!req.body.parrent) req.body.parrent = req.user._id
     try {
         const child = await Child.create(req.body);
+
+        const cookieOption = {
+            expiresIn: Date.now() + process.env.ACCESS_TOKEN_EXPIRE,
+            secure: true,
+            httpOnly: true
+        }
+        console.log(signToken(req.user._id))
+        res.cookie('token', signToken(req.user._id), cookieOption )
       
         res.status(200).json({
             status: 'success',
             data: {
                 user: req.user,
-                child
+                child,
+                token: signToken(req.user._id)
             }
         })
     } catch(err) {
@@ -42,8 +56,4 @@ exports.createChild =async(req, res, next) => {
             
         })
     }
-
-    
-
-    
 }

@@ -3,6 +3,7 @@ const app = express();
 const morgan = require('morgan')
 const cors = require('cors')
 const path = require('path')
+const cookieParser = require('cookie-parser')
 
 const globalErrorHandler = require('./controller/errorController')
 const appError = require('./utils/appError')
@@ -12,16 +13,18 @@ const authRouter = require('./router/user')
 const avaterRouter = require('./router/avater')
 const interestRouter = require('./router/interest')
 
-app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(cors({origin: ["http://localhost:3000"], credentials: true}))
 
+app.use(cookieParser())
 if (process.env.NODE_ENV === "development") {
     app.use(morgan('dev'))
 }
 
 app.use(express.static('public'))
 app.use(express.static(path.join(__dirname, 'public/avater')))
+app.use(express.static(path.join(__dirname, 'public/interest')))
 
 app.use('/api/v1/avater', avaterRouter)
 app.use('/api/v1/user', authRouter)
