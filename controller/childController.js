@@ -24,6 +24,28 @@ exports.addChild = catchAsync(async(req, res, next) => {
     })
 })
 
+exports.getOneChild = catchAsync(async(req, res, next) => {
+    const child = await Child.findById(req.params.id);
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            child
+        }
+    })
+})
+
+exports.getAllChild = catchAsync(async(req, res, next) => {
+    const child = await Child.find();
+
+    res.status(200).json({
+        status: 'success',
+        data: {
+            child
+        }
+    })
+})
+
 
 exports.createChild =async(req, res, next) => {
     if(!req.body.parrent) req.body.parrent = req.user._id
@@ -53,7 +75,6 @@ exports.createChild =async(req, res, next) => {
             data: {
                 message: "Something went wrong to Creating a Default User."
             }
-            
         })
     }
 }
