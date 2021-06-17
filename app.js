@@ -26,6 +26,7 @@ if (process.env.NODE_ENV === "development") {
 app.use(express.static('public'))
 app.use(express.static(path.join(__dirname, 'public/avater')))
 app.use(express.static(path.join(__dirname, 'public/interest')))
+app.use(express.static(path.join(__dirname, 'public/book')))
 
 app.use('/api/v1/avater', avaterRouter)
 app.use('/api/v1/user', authRouter)

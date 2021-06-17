@@ -24,7 +24,7 @@ exports.interestPhoto = upload.single('photo')
 
 const interestPhotoUploader = async (req) => {
 
-    const fileName = `avaterPhoto-${req.user.id}-${Date.now()}.jpeg`
+    const fileName = `interestPhoto-${req.user.id}-${Date.now()}.jpeg`
         await sharp(req.file.buffer)
             .resize(600, 600)
             .toFormat('jpeg')
