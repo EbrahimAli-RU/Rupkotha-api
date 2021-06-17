@@ -12,6 +12,7 @@ const childRouter = require('./router/child');
 const authRouter = require('./router/user')
 const avaterRouter = require('./router/avater')
 const interestRouter = require('./router/interest')
+const bookRouter = require('./router/book')
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -28,6 +29,7 @@ app.use(express.static(path.join(__dirname, 'public/interest')))
 
 app.use('/api/v1/avater', avaterRouter)
 app.use('/api/v1/user', authRouter)
+app.use('/api/v1/book', bookRouter)
 app.use('/api/v1/child', childRouter)
 app.use('/api/v1/interest', interestRouter)
 

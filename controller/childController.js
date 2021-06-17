@@ -54,8 +54,8 @@ exports.createChild =async(req, res, next) => {
 
         const cookieOption = {
             expiresIn: Date.now() + process.env.ACCESS_TOKEN_EXPIRE,
-            secure: true,
-            httpOnly: true
+            secure: false,
+            httpOnly: false
         }
         console.log(signToken(req.user._id))
         res.cookie('token', signToken(req.user._id), cookieOption )
