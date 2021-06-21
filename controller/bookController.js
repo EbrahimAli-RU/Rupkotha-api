@@ -42,7 +42,7 @@ const bookPhotoUploader = async (req) => {
 
     req.body.cardPhoto = `cardPhoto-${req.user.id}-${Date.now()}.jpeg`
     await sharp(req.files.cardPhoto[0].buffer)
-        .resize(800, 1920)
+        .resize(420, 280)
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toFile(`public/book/${req.body.cardPhoto}`);
@@ -66,18 +66,6 @@ exports.addBook = catchAsync(async(req, res, next) => {
     })
 })
 
-exports.getAllBook = catchAsync(async(req, res, next) => {
-    const book = await Book.find()
-
-    res.status(200).json({
-        status: 'success',
-        result: book.length,
-        data: {
-            book
-        }
-    })
-})
-
 exports.getOneBook = catchAsync(async(req, res, next) => {
     const book = await Book.findById(req.params.bookId)
     let cannel
@@ -93,3 +81,30 @@ exports.getOneBook = catchAsync(async(req, res, next) => {
         }
     })
 })
+
+exports.getAllBook = catchAsync(async(req, res, next) => {
+    let book
+    if((req.query.s * 1) === 0) {
+        const categories = ['New release']
+         book = await Book.aggregate([
+            { $unwind: "$category"},
+            { $match: {category: {$in: categories}}},
+            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id" } }, } },
+        ])
+    } else {
+         book = await Book.aggregate([
+            { $unwind: "$category"},
+            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id" } }, } }, 
+        ]).skip((req.query.s * 1 - 1) * (req.query.l * 1)).limit(req.query.l * 1)
+    }
+    
+
+    res.status(200).json({
+        status: 'success',
+        result: book.length,
+        data: {
+            book
+        }
+    })
+})
+
