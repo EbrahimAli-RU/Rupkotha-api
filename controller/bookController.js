@@ -68,16 +68,24 @@ exports.addBook = catchAsync(async(req, res, next) => {
 
 exports.getOneBook = catchAsync(async(req, res, next) => {
     const book = await Book.findById(req.params.bookId)
-    let cannel
+    let channel
     if(book) {
-        cannel = await Book.find({category: book.category[0]})
+        const categories = [req.query._channel]
+        channel = await Book.aggregate([
+            { $unwind: "$category"},
+            { $match: {category: {$in: categories}}},
+            { $project: {_id: 1, cardPhoto: 1, category: 1}},
+            { $skip: (req.query.p * 1 - 1) * (req.query.l * 1)},
+            { $limit: req.query.l * 1 }
+        ])
     }
 
     res.status(200).json({
         status: 'success',
         data: {
+            channelTitle: req.query._channel.split('%20').join(' '),
             book,
-            cannel
+            channel
         }
     })
 })
@@ -102,6 +110,22 @@ exports.getBookByChannel = catchAsync(async(req, res, next) => {
     })
 })
 
+exports.getCarosulData = catchAsync(async(req, res, next) => {
+
+    const inCaro = [true]
+    const carosul = await Book.aggregate([
+            { $match: {inCarosul: {$in: inCaro}}},
+        ])
+
+        res.status(200).json({
+            status: 'success',
+            result: carosul.length,
+            data: {
+                carosul
+            }
+        })
+})
+
 exports.getAllBook = catchAsync(async(req, res, next) => {
     let book
     if((req.query.s * 1) === 0) {
@@ -111,20 +135,30 @@ exports.getAllBook = catchAsync(async(req, res, next) => {
             { $match: {category: {$in: categories}}},
             { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } },
         ])
+        res.status(200).json({
+            status: 'success',
+            result: book.length,
+            data: {
+                book
+            }
+        })
+
     } else {
          book = await Book.aggregate([
             { $unwind: "$category"},
             { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } }, 
         ]).skip((req.query.s * 1 - 1) * (req.query.l * 1)).limit(req.query.l * 1)
+
+        res.status(200).json({
+            status: 'success',
+            result: book.length,
+            data: {
+                book
+            }
+        })
     }
     
 
-    res.status(200).json({
-        status: 'success',
-        result: book.length,
-        data: {
-            book
-        }
-    })
+    
 })
 
