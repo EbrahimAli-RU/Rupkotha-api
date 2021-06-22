@@ -35,7 +35,7 @@ const bookPhotoUploader = async (req) => {
 
     req.body.bookPhoto = `bookPhoto-${req.user.id}-${Date.now()}.jpeg`
     await sharp(req.files.bookPhoto[0].buffer)
-        .resize(800, 1920)
+        .resize(240, 295)
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
         .toFile(`public/book/${req.body.bookPhoto}`);
@@ -82,6 +82,26 @@ exports.getOneBook = catchAsync(async(req, res, next) => {
     })
 })
 
+exports.getBookByChannel = catchAsync(async(req, res, next) => {
+    console.log(req.query._channel.split('%20').join(' '))
+    const categories = [req.query._channel]
+    const channel = await Book.aggregate([
+        { $unwind: "$category"},
+        { $match: {category: {$in: categories}}},
+        { $project: {_id: 1, cardPhoto: 1, category: 1}},
+        { $skip: (req.query.p * 1 - 1) * (req.query.l * 1)},
+        { $limit: req.query.l * 1 }
+    ])
+
+    res.status(200).json({
+        status: 'success',
+        result: channel.length,
+        data: {
+            channel
+        }
+    })
+})
+
 exports.getAllBook = catchAsync(async(req, res, next) => {
     let book
     if((req.query.s * 1) === 0) {
@@ -89,12 +109,12 @@ exports.getAllBook = catchAsync(async(req, res, next) => {
          book = await Book.aggregate([
             { $unwind: "$category"},
             { $match: {category: {$in: categories}}},
-            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id" } }, } },
+            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } },
         ])
     } else {
          book = await Book.aggregate([
             { $unwind: "$category"},
-            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id" } }, } }, 
+            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } }, 
         ]).skip((req.query.s * 1 - 1) * (req.query.l * 1)).limit(req.query.l * 1)
     }
     
