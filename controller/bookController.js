@@ -146,7 +146,7 @@ exports.getAllBook = catchAsync(async(req, res, next) => {
     } else {
          book = await Book.aggregate([
             { $unwind: "$category"},
-            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } }, 
+            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } },
         ]).skip((req.query.s * 1 - 1) * (req.query.l * 1)).limit(req.query.l * 1)
 
         res.status(200).json({
