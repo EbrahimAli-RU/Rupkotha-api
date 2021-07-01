@@ -50,7 +50,7 @@ exports.signIn = catchAsync(async (req, res, next) => {
         httpOnly: false
     }
 
-    res.cookie('jwt', signToken(user._id), cookieOption )
+    res.cookie('token', signToken(user._id), cookieOption )
 
     res.status(200).json({
         status: 'success',

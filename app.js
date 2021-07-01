@@ -13,7 +13,8 @@ const authRouter = require('./router/user')
 const avaterRouter = require('./router/avater')
 const interestRouter = require('./router/interest')
 const bookRouter = require('./router/book')
-
+const wishlistRouter = require('./router/wishlist')
+ 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cors({origin: ["http://localhost:3000"], credentials: true}))
@@ -33,6 +34,7 @@ app.use('/api/v1/user', authRouter)
 app.use('/api/v1/book', bookRouter)
 app.use('/api/v1/child', childRouter)
 app.use('/api/v1/interest', interestRouter)
+app.use('/api/v1/wishlist', wishlistRouter)
 
 app.all(`*`, (req, res, next) => {
     next(new appError(`Can't find ${req.originalUrl} on this server`, 404))

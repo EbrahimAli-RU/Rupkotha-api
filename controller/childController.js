@@ -40,6 +40,7 @@ exports.getAllChild = catchAsync(async(req, res, next) => {
 
     res.status(200).json({
         status: 'success',
+        result: child.length,
         data: {
             child
         }
@@ -63,7 +64,7 @@ exports.createChild =async(req, res, next) => {
         res.status(200).json({
             status: 'success',
             data: {
-                user: req.user,
+                user: req.user._id,
                 child,
                 token: signToken(req.user._id)
             }
@@ -78,3 +79,12 @@ exports.createChild =async(req, res, next) => {
         })
     }
 }
+
+exports.deleteChild = catchAsync(async(req, res, next) => {
+    const child = await Child.findByIdAndDelete(req.params.childId)
+
+    res.status(204).json({
+        status: 'success',
+        
+    })
+})
