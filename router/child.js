@@ -9,6 +9,7 @@ router.route('/')
 router.get('/:id', childController.getOneChild)
 router.get('/', childController.getAllChild)
 router.post('/add-child',authController.protected, childController.addChild)
+router.patch('/:childId', childController.updateChild)
 router.delete('/:childId', childController.deleteChild)
 
 

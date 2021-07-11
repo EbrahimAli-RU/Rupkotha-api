@@ -88,3 +88,20 @@ exports.deleteChild = catchAsync(async(req, res, next) => {
         
     })
 })
+
+exports.updateChild = catchAsync(async(req, res, next) => {
+    const child = await Child.findByIdAndUpdate(req.params.childId, {
+        name: req.body.name,
+        age: req.body.age,
+        language: req.body.language,
+        interest: req.body.interest,
+        photo: req.body.photo
+    }, { new: true, runValidators: true })
+
+    res.status(204).json({
+        status: 'success',
+        data: {
+            child
+        }
+    })
+})
