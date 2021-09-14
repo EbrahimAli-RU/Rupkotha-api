@@ -5,7 +5,7 @@ const bookSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Background photo is required']
     },
-    bookPhoto : {
+    bookPhoto: {
         type: String,
         required: [true, 'Book  photo is required']
     },
@@ -19,6 +19,11 @@ const bookSchema = new mongoose.Schema({
     shortDescription: {
         type: String
     },
+    page: {
+        type: mongoose.Schema.ObjectId,
+        required: true,
+        ref: 'page'
+    },
     timeToRead: {
         type: String
     },
@@ -31,7 +36,7 @@ const bookSchema = new mongoose.Schema({
     inCarosul: {
         type: Boolean
     }
-})
+}, { timestamps: true })
 
 const Book = mongoose.model('book', bookSchema)
 

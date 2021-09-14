@@ -21,7 +21,7 @@ exports.dataValidity = (userName, email, password, confirmPassword) => {
         }
     } else if (password !== confirmPassword) {
         return {
-            message: `Password is not equal to confirmpassword`,
+            message: `Password is not same as confirmpassword (:`,
             statusCode: 400
         }
     } else {
@@ -30,5 +30,9 @@ exports.dataValidity = (userName, email, password, confirmPassword) => {
 }
 
 const validateEmail = email => {
+    return (/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/).test(email)
+}
+
+exports.validateMail = email => {
     return (/^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/).test(email)
 }

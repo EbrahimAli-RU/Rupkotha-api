@@ -38,7 +38,7 @@ const handleMongoValidatorError = err => {
 
 const handleCastErrorDB = err => {
     const message = `Invalid ${err.path}: ${err.value}.`;
-    return new AppError(message, 400);
+    return new appError(message, 400);
 };
 
 const handleJWTError = () =>

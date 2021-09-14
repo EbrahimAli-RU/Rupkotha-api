@@ -8,7 +8,10 @@ router.post('/', authController.protected, bookController.bookPhotos, bookContro
 router.get('/', bookController.getAllBook);
 router.get('/carosul', bookController.getCarosulData)
 router.get('/channel', bookController.getBookByChannel)
+router.get('/:BookId/read', bookController.getBookPages)
 router.get('/:bookId', bookController.getOneBook)
+router.delete('/:bookId', bookController.deleteBook)
+
 
 
 module.exports = router

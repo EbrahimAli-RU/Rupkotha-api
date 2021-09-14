@@ -23,6 +23,9 @@
     "nodemailer": "^6.4.17",
     "nodemon": "^2.0.7",
     "sharp": "^0.28.3",
+    "sslcommerz": "^1.7.0",
+    "sslcommerz-lts": "^1.0.1",
     "validator": "^13.5.2"
-  }
+  },
+  "proxy": "https://sandbox.sslcommerz.com/EasyCheckOut/testcde821b90ac8783ab9f2cb756b960077121"
 }

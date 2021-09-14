@@ -31,13 +31,13 @@ const bookPhotoUploader = async (req) => {
         .resize(800, 1920)
         .toFormat('jpeg')
         .jpeg({ quality: 90 })
-        .toFile(`public/book/${req.body.coverphoto}`);
+        .toFile(`public/book/${req.body.backgroundPhoto}`);
 
     req.body.bookPhoto = `bookPhoto-${req.user.id}-${Date.now()}.jpeg`
     await sharp(req.files.bookPhoto[0].buffer)
-        .resize(240, 295)
-        .toFormat('jpeg')
-        .jpeg({ quality: 90 })
+        // .resize(240, 295)
+        // .toFormat('jpeg')
+        // .jpeg({ quality: 90 })
         .toFile(`public/book/${req.body.bookPhoto}`);
 
     req.body.cardPhoto = `cardPhoto-${req.user.id}-${Date.now()}.jpeg`
@@ -55,7 +55,7 @@ exports.resizeBookPhotos = catchAsync(async (req, res, next) => {
     next();
 })
 
-exports.addBook = catchAsync(async(req, res, next) => {
+exports.addBook = catchAsync(async (req, res, next) => {
     const book = await Book.create(req.body)
 
     res.status(201).json({
@@ -66,16 +66,16 @@ exports.addBook = catchAsync(async(req, res, next) => {
     })
 })
 
-exports.getOneBook = catchAsync(async(req, res, next) => {
+exports.getOneBook = catchAsync(async (req, res, next) => {
     const book = await Book.findById(req.params.bookId)
     let channel
-    if(book) {
+    if (book) {
         const categories = [req.query._channel]
         channel = await Book.aggregate([
-            { $unwind: "$category"},
-            { $match: {category: {$in: categories}}},
-            { $project: {_id: 1, cardPhoto: 1, category: 1}},
-            { $skip: (req.query.p * 1 - 1) * (req.query.l * 1)},
+            { $unwind: "$category" },
+            { $match: { category: { $in: categories } } },
+            { $project: { _id: 1, cardPhoto: 1, category: 1, shortDescription: 1 } },
+            { $skip: (req.query.p * 1 - 1) * (req.query.l * 1) },
             { $limit: req.query.l * 1 }
         ])
     }
@@ -90,17 +90,17 @@ exports.getOneBook = catchAsync(async(req, res, next) => {
     })
 })
 
-exports.getBookByChannel = catchAsync(async(req, res, next) => {
+exports.getBookByChannel = catchAsync(async (req, res, next) => {
     console.log(req.query._channel.split('%20').join(' '))
     const categories = [req.query._channel]
     const channel = await Book.aggregate([
-        { $unwind: "$category"},
-        { $match: {category: {$in: categories}}},
-        { $project: {_id: 1, cardPhoto: 1, category: 1}},
-        { $skip: (req.query.p * 1 - 1) * (req.query.l * 1)},
+        { $unwind: "$category" },
+        { $match: { category: { $in: categories } } },
+        { $project: { _id: 1, cardPhoto: 1, category: 1, shortDescription: 1 } },
+        { $skip: (req.query.p * 1 - 1) * (req.query.l * 1) },
         { $limit: req.query.l * 1 }
     ])
-
+    console.log(channel)
     res.status(200).json({
         status: 'success',
         result: channel.length,
@@ -110,30 +110,30 @@ exports.getBookByChannel = catchAsync(async(req, res, next) => {
     })
 })
 
-exports.getCarosulData = catchAsync(async(req, res, next) => {
+exports.getCarosulData = catchAsync(async (req, res, next) => {
 
     const inCaro = [true]
     const carosul = await Book.aggregate([
-            { $match: {inCarosul: {$in: inCaro}}},
-        ])
+        { $match: { inCarosul: { $in: inCaro } } },
+    ])
 
-        res.status(200).json({
-            status: 'success',
-            result: carosul.length,
-            data: {
-                carosul
-            }
-        })
+    res.status(200).json({
+        status: 'success',
+        result: carosul.length,
+        data: {
+            carosul
+        }
+    })
 })
 
-exports.getAllBook = catchAsync(async(req, res, next) => {
+exports.getAllBook = catchAsync(async (req, res, next) => {
     let book
-    if((req.query.s * 1) === 0) {
+    if ((req.query.s * 1) === 0) {
         const categories = ['New release']
-         book = await Book.aggregate([
-            { $unwind: "$category"},
-            { $match: {category: {$in: categories}}},
-            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } },
+        book = await Book.aggregate([
+            { $unwind: "$category" },
+            { $match: { category: { $in: categories } } },
+            { $group: { _id: "$category", books: { $push: { cardPhoto: "$cardPhoto", id: "$_id", channel: "$category", shortDescription: "$shortDescription" } }, } },
         ])
         res.status(200).json({
             status: 'success',
@@ -144,9 +144,9 @@ exports.getAllBook = catchAsync(async(req, res, next) => {
         })
 
     } else {
-         book = await Book.aggregate([
-            { $unwind: "$category"},
-            { $group: { _id: "$category", books: { $push: {cardPhoto: "$cardPhoto", id: "$_id", channel: "$category" } }, } },
+        book = await Book.aggregate([
+            { $unwind: "$category" },
+            { $group: { _id: "$category", books: { $push: { cardPhoto: "$cardPhoto", id: "$_id", channel: "$category", shortDescription: "$shortDescription" } }, } },
         ]).skip((req.query.s * 1 - 1) * (req.query.l * 1)).limit(req.query.l * 1)
 
         res.status(200).json({
@@ -157,8 +157,33 @@ exports.getAllBook = catchAsync(async(req, res, next) => {
             }
         })
     }
-    
+})
 
-    
+exports.getBookPages = catchAsync(async (req, res, next) => {
+    const pages = await Book.findById(req.params.BookId).populate({
+        path: 'page',
+        select: 'pages'
+    })
+    res.status(200).json({
+        status: 'success',
+        data: {
+            pages
+        }
+    })
+})
+
+
+exports.deleteBook = catchAsync(async (req, res, next) => {
+    console.log(req.params.bookId)
+    const book = await Book.findByIdAndDelete(req.params.bookId);
+    if (!book) {
+        return next(new appError(`No book found`, 400))
+    }
+    res.status(204).json({
+        status: 'success',
+        data: {
+            book
+        }
+    })
 })
 

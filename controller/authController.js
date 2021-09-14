@@ -5,34 +5,75 @@ const User = require('../model/user')
 const catchAsync = require('../utils/catchAsync')
 const appError = require('../utils/appError')
 const sendMail = require('../utils/email')
-const { dataValidity, validateEmail } = require('../utils/validity')
+const { dataValidity, validateMail } = require('../utils/validity')
 const { promisify } = require('util')
 
 
 const signToken = id => {
     return jwt.sign({ id }, process.env.ACCESS_TOKEN_SECRET_KEY, { expiresIn: process.env.ACCESS_TOKEN_EXPIRE })
 }
-
-
 exports.register = catchAsync(async (req, res, next) => {
-    const user = await User.findOne({email: req.body.email})
-    if(user) {
-        return next(new appError('This email is already exist! Please use another one.', 400))
+    const { userName, email, password, confirmPassword } = req.body
+    const result = dataValidity(userName.trim(), email.trim().toLowerCase(), password.trim(), confirmPassword.trim())
+    if (result) {
+        return next(new appError(result.message, result.statusCode))
     }
-    const newUser = await User.create(req.body)
-    
-    if(newUser) {
-        req.user = newUser
-        next();
-    } else {
-        res.status(400).json({
-            status: 'fail',
-            data: {
-                message: 'Some went wrong to Creating Your acconut!! Please try again'
-            }
+    const user = await User.findOne({ email })
+    if (user) {
+        return next(new appError(`This email is already exist, please try another one`, 400))
+    }
+    const token = await jwt.sign({
+        userName,
+        email,
+        password,
+        confirmPassword
+    }, process.env.PRIVATE_KEY, { expiresIn: '5m' })
+    const activationUrl = `${process.env.CLIENT_URL}/activate/${token}`
+
+    try {
+        await sendMail({
+            to: email,
+            subject: `Active your account`,
+            txt: `Active Acount`,
+            url: activationUrl
         })
+        res.status(200).json({
+            status: 'success',
+            message: `Please check your Email ${email}`
+        })
+    } catch (err) {
+        return next(new appError(`There is an error sending email, please try again later`, 500))
     }
-    
+
+})
+
+
+exports.activation = catchAsync(async (req, res, next) => {
+    const { activationToken } = req.body
+    jwt.verify(activationToken, process.env.PRIVATE_KEY, async function (err, decoded) {
+        if (err) {
+            switch (err.name) {
+                case 'TokenExpiredError':
+                    return next(new appError(`This token is no longer valid! 
+                        Please try to activate your account in time :)`, 400))
+                case 'JsonWebTokenError':
+                    return next(new appError(`Not a Valid Token`, 400))
+            }
+        } else {
+
+            const newUser = await User.create({
+                userName: decoded.userName,
+                email: decoded.email,
+                password: decoded.password,
+                confirmPassword: decoded.confirmPassword
+            })
+            if (newUser) {
+                req.user = newUser
+                next();
+            }
+
+        }
+    });
 })
 
 exports.signIn = catchAsync(async (req, res, next) => {
@@ -50,7 +91,7 @@ exports.signIn = catchAsync(async (req, res, next) => {
         httpOnly: false
     }
 
-    res.cookie('token', signToken(user._id), cookieOption )
+    res.cookie('token', signToken(user._id), cookieOption)
 
     res.status(200).json({
         status: 'success',
@@ -62,15 +103,21 @@ exports.signIn = catchAsync(async (req, res, next) => {
     })
 })
 
+exports.logout = catchAsync(async (req, res, next) => {
+    res.cookie('token', '');
+    res.status(200).json({
+        status: 'success'
+    })
+})
+
 exports.protected = catchAsync(async (req, res, next) => {
     let token;
-    console.log(req.headers.cookie)
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         token = req.headers.authorization.split(' ')[1]
-    } else if (req.headers.cookie.split('=')[1]) {
-        token = req.headers.cookie.split('=')[1]
+    } else if (req.headers.cookie?.split('=')[1]) {
+        token = req.headers.cookie?.split('=')[1]
     }
-    console.log(req.headers.cookie)
+
     if (!token) {
         return next(new appError(`You are not logged in! please login.`, 401))
     }
@@ -92,13 +139,21 @@ exports.protected = catchAsync(async (req, res, next) => {
 
 exports.forgotPassword = catchAsync(async (req, res, next) => {
     const { email } = req.body
+    if (!email) {
+        return next(new appError(`Please provide email Address!`, 400))
+    }
+    if (!validateMail(email)) {
+        return next(new appError(`Not an E-Mail, Please provide valid Email address!!!`, 400))
+    }
     const user = await User.findOne({ email });
     if (!user) {
         return next(new appError(`No user with this email`, 404))
     }
     const resetToken = user.createPasswordResetToken()
+    console.log(resetToken)
     await user.save({ validateBeforeSave: false })
-    const forgotPasswordUrl = `${process.env.CLIENT_URL}/user/forgotPassword/${resetToken}`
+
+    const forgotPasswordUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`
     try {
         await sendMail({
             to: email,
@@ -109,7 +164,7 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
         res.status(200).json({
             status: 'success',
-            message: `E-Mail send to to ${email}`
+            message: `Please check your Email ${email}`
         })
     } catch (err) {
         user.passwordResetToken = undefined
@@ -132,10 +187,18 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     user.passwordResetExpire = undefined
     await user.save()
 
+    const cookieOption = {
+        expiresIn: Date.now() + process.env.ACCESS_TOKEN_EXPIRE,
+        secure: false,
+        httpOnly: false
+    }
+
+    res.cookie('token', signToken(user._id), cookieOption)
+
     res.status(200).json({
         status: 'success',
         data: {
-            id: user._id,
+            user: user._id,
             token: signToken(user._id)
         }
     })
@@ -174,18 +237,19 @@ exports.restrictTo = (...roles) => {
 };
 
 exports.getUser = catchAsync(async (req, res, next) => {
-    const users = await User.findOne({_id: req.params.userId}).populate({
+    const users = await User.findOne({ _id: req.params.userId }).populate({
         path: 'children'
     })
+    console.log(users)
     res.status(200).json({
         status: 'success',
         users
     })
 })
 
-exports.deleteUser =async userId => {
+exports.deleteUser = async userId => {
     console.log("KJHGFDSDFGHJ")
-     async (req, res, next) => {
+    async (req, res, next) => {
         const user = await User.findByIdAndDelete(userId);
         console.log('INSIDE DELETE USER!!!!!!!!');
         console.log(user);
