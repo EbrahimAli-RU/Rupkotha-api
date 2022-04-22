@@ -12,4 +12,15 @@ Rupkotha is a story book platform for child. Created using `node.js` `express.js
   * Admin can add new book, update existing book, delete book.
   * Admin can create new subscription package, edit subscription package, delete subscription package.
   * Admin can create cupon.
+
+## Setup
+Setup:
+  * Copy repo [link](https://github.com/EbrahimAli-RU/Rupkotha-api)
+  * Run `git clone repo-link`
+  * Run `npm install`
+  * Create a .env file and put the project credential (NODE_ENV=development or production, MONGODB_LOCAL_URL, PRIVATE_KEY, ACCESS_TOKEN_EXPIRE, ACCESS_TOKEN_SECRET_KEY)
+  * Run `npm run dev`
+
+## Contact
+Created by [@Md.Ebrahim Ali](https://github.com/EbrahimAli-RU/portfolio) - feel free to contact me!
  
